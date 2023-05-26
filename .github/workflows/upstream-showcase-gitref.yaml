@@ -1,0 +1,91 @@
+name: Upstream Showcase using Git Refs
+on:
+  workflow_dispatch:
+jobs:
+  check:
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+    steps:
+      - name: Checkout sdk-platform-java @ main
+        uses: actions/checkout@v3
+        with:
+          path: sdk-platform-java
+      - uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'maven'
+
+      - name: Install sdk-platform-java to local maven repository
+        shell: bash
+        working-directory: sdk-platform-java
+        run: mvn install -B -ntp -T 1C -DskipTests
+      - name: Install showcase to local maven repository
+        shell: bash
+        working-directory: sdk-platform-java/showcase
+        run: mvn install -B -ntp -T 1C -DskipTests
+
+      - name: Checkout Protobuf with specified Git ref "${{ matrix.protobuf-ref }}"
+        uses: actions/checkout@v3
+        with:
+          repository: 'protocolbuffers/protobuf'
+          ref: 23.x-202305171614 #${{ matrix.protobuf-ref }}
+          path: protobuf
+      - name: Checkout gRPC with Protobuf v23
+        uses: actions/checkout@v3
+        with:
+          repository: grpc/grpc
+          ref: master #${{ matrix.grpc-ref }}
+          path: grpc
+      - name: Show protobuf repository's "git log -1"
+        working-directory: protobuf
+        shell: bash
+        run: |
+          echo "working directory: $(pwd)"
+          echo "git log -1:"
+          git log -1
+      - name: Show grpc repository's "git log -1"
+        working-directory: grpc
+        shell: bash
+        run: |
+          echo "working directory: $(pwd)"
+          echo "git log -1:"
+          git log -1
+
+      - name: Cache Bazel cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/bazel
+          key: ${{ runner.os }}-bazel-${{ hashFiles('grpc/WORKSPACE', 'sdk-platform-java/WORKSPACE', 'protobuf/WORKSPACE') }}
+          restore-keys: |
+            ${{ runner.os }}-bazel-${{ hashFiles('grpc/WORKSPACE', 'sdk-platform-java/WORKSPACE', 'protobuf/WORKSPACE') }}
+
+      - name: Update Showcase version to 0.0.2-SNAPSHOT
+        working-directory: sdk-platform-java/showcase
+        shell: bash
+        run: mvn versions:set -DnewVersion=0.0.2-SNAPSHOT
+
+      - name: Run code generation bazel build ${{ matrix.googleapis-bazel-target }}
+        working-directory: sdk-platform-java/showcase
+        shell: bash
+        run: |
+          bazelisk run //showcase:update_proto --verbose_failures \
+            --override_repository=com_google_protobuf=${GITHUB_WORKSPACE}/protobuf \
+            --override_repository=com_github_grpc_grpc=${GITHUB_WORKSPACE}/grpc
+          bazelisk run //showcase:update_grpc --verbose_failures \
+            --override_repository=com_google_protobuf=${GITHUB_WORKSPACE}/protobuf \
+            --override_repository=com_github_grpc_grpc=${GITHUB_WORKSPACE}/grpc
+          bazelisk run //showcase:update_gapic --verbose_failures \
+            --override_repository=com_google_protobuf=${GITHUB_WORKSPACE}/protobuf \
+            --override_repository=com_github_grpc_grpc=${GITHUB_WORKSPACE}/grpc
+
+      - working-directory: sdk-platform-java/showcase
+        shell: bash
+        run: git diff
+
+      - name: Clirr Check
+        working-directory: sdk-platform-java/showcase
+        shell: bash
+        run: mvn clirr:check -Dclirr.skip=false -DcomparisonVersion=0.0.1-SNAPSHOT -X
