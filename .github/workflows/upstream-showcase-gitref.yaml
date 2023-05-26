@@ -10,22 +10,23 @@ on:
         default: "v1.55.x"
         description: "gRPC Git ref to test"
         required: true
+
 jobs:
   binary-compatibility-check:
     runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
     steps:
-      - name: Checkout sdk-platform-java @ main
-        uses: actions/checkout@v3
-        with:
-          path: sdk-platform-java
       - uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
           java-version: '17'
           cache: 'maven'
 
+      - name: Checkout sdk-platform-java @ main
+        uses: actions/checkout@v3
+        with:
+          path: sdk-platform-java
       - name: Install sdk-platform-java to local maven repository
         shell: bash
         working-directory: sdk-platform-java
@@ -55,8 +56,7 @@ jobs:
         shell: bash
         run: git log -1
 
-      - name: Cache Bazel cache
-        uses: actions/cache@v3
+      - uses: actions/cache@v3
         with:
           path: |
             ~/.cache/bazel
@@ -64,12 +64,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-bazel-${{ hashFiles('grpc/WORKSPACE', 'sdk-platform-java/WORKSPACE', 'protobuf/WORKSPACE') }}
 
-      - name: Update Showcase version to 0.0.2-SNAPSHOT
-        working-directory: sdk-platform-java/showcase
-        shell: bash
-        run: mvn versions:set -B -ntp -DnewVersion=0.0.2-SNAPSHOT
-
-      - name: Update showcase generated source based on local protobuf and grpc checkouts
+      - name: Regenerate Showcase based on local Protobuf and gRPC checkouts
         working-directory: sdk-platform-java/showcase
         shell: bash
         run: |
@@ -90,4 +85,6 @@ jobs:
       - name: Clirr Check
         working-directory: sdk-platform-java/showcase
         shell: bash
-        run: mvn clirr:check -B -ntp -Dclirr.skip=false -DcomparisonVersion=0.0.1-SNAPSHOT
+        run: |
+          mvn versions:set -B -ntp -DnewVersion=0.0.2-SNAPSHOT
+          mvn clirr:check -B -ntp -Dclirr.skip=false -DcomparisonVersion=0.0.1-SNAPSHOT
