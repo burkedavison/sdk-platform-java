@@ -73,14 +73,16 @@ jobs:
         run: |
           sed -i '/version.io_grpc=.*/ s/=.*/=1.55.1/' dependencies.properties
           sed -i '/version.com_google_protobuf=.*/ s/=.*/=3.23.1/' dependencies.properties
+          cat dependencies.properties
 
       - name: Run code generation bazel build ${{ matrix.googleapis-bazel-target }}
-        working-directory: sdk-platform-java
+        working-directory: sdk-platform-java/showcase
         shell: bash
         run: |
-          bazelisk build //showcase:update_proto --verbose_failures
-          bazelisk build //showcase:update_grpc --verbose_failures
-          bazelisk build //showcase:update_gapic --verbose_failures
+          mvn compile -Pupdate
+#          bazelisk build //showcase:update_proto --verbose_failures
+#          bazelisk build //showcase:update_grpc --verbose_failures
+#          bazelisk build //showcase:update_gapic --verbose_failures
 
       - working-directory: sdk-platform-java/showcase
         shell: bash
