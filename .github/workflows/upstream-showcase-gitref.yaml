@@ -5,9 +5,11 @@ on:
       protobuf-refs:
         default: "23.x-202305171614"
         description: "Protobuf Git ref to test"
+        required: true
       grpc-refs:
         default: "v1.55.x"
         description: "gRPC Git ref to test"
+        required: true
 jobs:
   binary-compatibility-check:
     runs-on: ubuntu-22.04
