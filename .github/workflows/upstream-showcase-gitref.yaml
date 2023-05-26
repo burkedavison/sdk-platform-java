@@ -14,6 +14,9 @@ on:
 jobs:
   binary-compatibility-check:
     runs-on: ubuntu-22.04
+    defaults:
+      run:
+        shell: bash
     strategy:
       fail-fast: false
     steps:
@@ -28,11 +31,9 @@ jobs:
         with:
           path: sdk-platform-java
       - name: Install sdk-platform-java to local maven repository
-        shell: bash
         working-directory: sdk-platform-java
         run: mvn install -B -ntp -T 1C -DskipTests
       - name: Install current showcase to local maven repository
-        shell: bash
         working-directory: sdk-platform-java/showcase
         run: mvn install -B -ntp -T 1C -DskipTests
 
@@ -43,7 +44,6 @@ jobs:
           ref: ${{ inputs.protobuf-ref }}
           path: protobuf
       - working-directory: protobuf
-        shell: bash
         run: git log -1
 
       - name: Checkout gRPC @ ${{ inputs.grpc-ref }}
@@ -53,7 +53,6 @@ jobs:
           ref: ${{ inputs.grpc-ref }}
           path: grpc
       - working-directory: grpc
-        shell: bash
         run: git log -1
 
       - uses: actions/cache@v3
@@ -66,7 +65,6 @@ jobs:
 
       - name: Regenerate Showcase based on local Protobuf and gRPC checkouts
         working-directory: sdk-platform-java/showcase
-        shell: bash
         run: |
           bazelisk run //showcase:update_proto --verbose_failures \
             --override_repository=com_google_protobuf=${GITHUB_WORKSPACE}/protobuf \
@@ -79,12 +77,10 @@ jobs:
             --override_repository=com_github_grpc_grpc=${GITHUB_WORKSPACE}/grpc
 
       - working-directory: sdk-platform-java/showcase
-        shell: bash
         run: git diff
 
       - name: Clirr Check
         working-directory: sdk-platform-java/showcase
-        shell: bash
         run: |
           mvn versions:set -B -ntp -DnewVersion=0.0.2-SNAPSHOT
           mvn clirr:check -B -ntp -Dclirr.skip=false -DcomparisonVersion=0.0.1-SNAPSHOT
