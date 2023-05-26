@@ -71,8 +71,8 @@ jobs:
         working-directory: sdk-platform-java/gax-java
         shell: bash
         run: |
-          sed -i '' '/version.io_grpc=.*/ s/=.*/=1.55.1/' dependencies.properties
-          sed -i '' '/version.com_google_protobuf=.*/ s/=.*/=3.23.1/' dependencies.properties
+          sed -i '/version.io_grpc=.*/ s/=.*/=1.55.1/' dependencies.properties
+          sed -i '/version.com_google_protobuf=.*/ s/=.*/=3.23.1/' dependencies.properties
 
       - name: Run code generation bazel build ${{ matrix.googleapis-bazel-target }}
         working-directory: sdk-platform-java
