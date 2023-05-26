@@ -84,6 +84,10 @@ jobs:
               --override_repository=com_google_protobuf=${GITHUB_WORKSPACE}/protobuf \
               --override_repository=com_github_grpc_grpc=${GITHUB_WORKSPACE}/grpc
 
+      - working-directory: sdk-platform-java/showcase
+        shell: bash
+        run: git diff
+
       - name: Clirr Check
         working-directory: sdk-platform-java/showcase
         shell: bash
