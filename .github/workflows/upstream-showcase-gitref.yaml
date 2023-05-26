@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
     inputs:
       protobuf-refs:
-        default: [ 23.x-202305171614 ]
+        default: 23.x-202305171614
         description: "Protobuf Git refs to test"
 jobs:
   check:
