@@ -2,11 +2,11 @@ name: Upstream Showcase using Git Refs
 on:
   workflow_dispatch:
     inputs:
-      protobuf-refs:
+      protobuf-ref:
         default: "23.x-202305171614"
         description: "Protobuf Git ref to test"
         required: true
-      grpc-refs:
+      grpc-ref:
         default: "v1.55.x"
         description: "gRPC Git ref to test"
         required: true
@@ -35,33 +35,25 @@ jobs:
         working-directory: sdk-platform-java/showcase
         run: mvn install -B -ntp -T 1C -DskipTests
 
-      - name: Checkout Protobuf @ ${{ inputs.protobuf-ref }}
+      - name: Checkout Protobuf
         uses: actions/checkout@v3
         with:
           repository: 'protocolbuffers/protobuf'
           ref: ${{ inputs.protobuf-ref }}
           path: protobuf
-      - name: Checkout gRPC @ ${{ inputs.grpc-ref }}
+      - working-directory: protobuf
+        shell: bash
+        run: git log -1
+
+      - name: Checkout gRPC
         uses: actions/checkout@v3
         with:
           repository: grpc/grpc
           ref: ${{ inputs.grpc-ref }}
           path: grpc
-
-      - name: Show protobuf repository's "git log -1"
-        working-directory: protobuf
+      - working-directory: grpc
         shell: bash
-        run: |
-          echo "working directory: $(pwd)"
-          echo "git log -1:"
-          git log -1
-      - name: Show grpc repository's "git log -1"
-        working-directory: grpc
-        shell: bash
-        run: |
-          echo "working directory: $(pwd)"
-          echo "git log -1:"
-          git log -1
+        run: git log -1
 
       - name: Cache Bazel cache
         uses: actions/cache@v3
