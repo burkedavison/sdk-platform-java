@@ -26,32 +26,32 @@ jobs:
         working-directory: sdk-platform-java/showcase
         run: mvn install -B -ntp -T 1C -DskipTests
 
-      - name: Checkout Protobuf with specified Git ref "${{ matrix.protobuf-ref }}"
-        uses: actions/checkout@v3
-        with:
-          repository: 'protocolbuffers/protobuf'
-          ref: 23.x-202305171614 #${{ matrix.protobuf-ref }}
-          path: protobuf
-      - name: Checkout gRPC with Protobuf v23
-        uses: actions/checkout@v3
-        with:
-          repository: grpc/grpc
-          ref: master #${{ matrix.grpc-ref }}
-          path: grpc
-      - name: Show protobuf repository's "git log -1"
-        working-directory: protobuf
-        shell: bash
-        run: |
-          echo "working directory: $(pwd)"
-          echo "git log -1:"
-          git log -1
-      - name: Show grpc repository's "git log -1"
-        working-directory: grpc
-        shell: bash
-        run: |
-          echo "working directory: $(pwd)"
-          echo "git log -1:"
-          git log -1
+#      - name: Checkout Protobuf with specified Git ref "${{ matrix.protobuf-ref }}"
+#        uses: actions/checkout@v3
+#        with:
+#          repository: 'protocolbuffers/protobuf'
+#          ref: 23.x-202305171614 #${{ matrix.protobuf-ref }}
+#          path: protobuf
+#      - name: Checkout gRPC with Protobuf v23
+#        uses: actions/checkout@v3
+#        with:
+#          repository: grpc/grpc
+#          ref: master #${{ matrix.grpc-ref }}
+#          path: grpc
+#      - name: Show protobuf repository's "git log -1"
+#        working-directory: protobuf
+#        shell: bash
+#        run: |
+#          echo "working directory: $(pwd)"
+#          echo "git log -1:"
+#          git log -1
+#      - name: Show grpc repository's "git log -1"
+#        working-directory: grpc
+#        shell: bash
+#        run: |
+#          echo "working directory: $(pwd)"
+#          echo "git log -1:"
+#          git log -1
 
       - name: Cache Bazel cache
         uses: actions/cache@v3
@@ -67,22 +67,20 @@ jobs:
         shell: bash
         run: mvn versions:set -DnewVersion=0.0.2-SNAPSHOT
 
+      - name: Update proto and grpc versions
+        working-directory: sdk-platform-java/gax-java
+        shell: bash
+        run: |
+          sed -i '' '/version.io_grpc=.*/ s/=.*/=1.55.1/' dependencies.properties
+          sed -i '' '/version.com_google_protobuf=.*/ s/=.*/=3.23.1/' dependencies.properties
+
       - name: Run code generation bazel build ${{ matrix.googleapis-bazel-target }}
         working-directory: sdk-platform-java
         shell: bash
         run: |
-          bazelisk build //showcase:update_proto \
-              --verbose_failures \
-              --override_repository=com_google_protobuf=${GITHUB_WORKSPACE}/protobuf \
-              --override_repository=com_github_grpc_grpc=${GITHUB_WORKSPACE}/grpc
-          bazelisk build //showcase:update_grpc \
-              --verbose_failures \
-              --override_repository=com_google_protobuf=${GITHUB_WORKSPACE}/protobuf \
-              --override_repository=com_github_grpc_grpc=${GITHUB_WORKSPACE}/grpc
-          bazelisk build //showcase:update_gapic \
-              --verbose_failures \
-              --override_repository=com_google_protobuf=${GITHUB_WORKSPACE}/protobuf \
-              --override_repository=com_github_grpc_grpc=${GITHUB_WORKSPACE}/grpc
+          bazelisk build //showcase:update_proto --verbose_failures
+          bazelisk build //showcase:update_grpc --verbose_failures
+          bazelisk build //showcase:update_gapic --verbose_failures
 
       - working-directory: sdk-platform-java/showcase
         shell: bash
