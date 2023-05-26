@@ -35,17 +35,17 @@ jobs:
         working-directory: sdk-platform-java/showcase
         run: mvn install -B -ntp -T 1C -DskipTests
 
-      - name: Checkout Protobuf with specified Git ref "${{ matrix.protobuf-ref }}"
+      - name: Checkout Protobuf @ ${{ inputs.protobuf-ref }}
         uses: actions/checkout@v3
         with:
           repository: 'protocolbuffers/protobuf'
-          ref: ${{ matrix.protobuf-ref }}
+          ref: ${{ inputs.protobuf-ref }}
           path: protobuf
-      - name: Checkout gRPC with Protobuf v23
+      - name: Checkout gRPC @ ${{ inputs.grpc-ref }}
         uses: actions/checkout@v3
         with:
           repository: grpc/grpc
-          ref: ${{ matrix.grpc-ref }}
+          ref: ${{ inputs.grpc-ref }}
           path: grpc
 
       - name: Show protobuf repository's "git log -1"
