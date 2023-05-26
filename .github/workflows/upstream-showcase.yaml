@@ -25,13 +25,13 @@ jobs:
         uses: actions/checkout@v3
         with:
           repository: 'protocolbuffers/protobuf'
-          ref: [ main ] #${{ matrix.protobuf-ref }}
+          ref: main #${{ matrix.protobuf-ref }}
           path: protobuf
       - name: Checkout gRPC with Protobuf v23
         uses: actions/checkout@v3
         with:
           repository: grpc/grpc
-          ref: [ main ] #${{ matrix.grpc-ref }}
+          ref: main #${{ matrix.grpc-ref }}
           path: grpc
       - name: Show protobuf repository's "git log -1"
         working-directory: protobuf
