@@ -1,77 +1,65 @@
 name: Upstream Showcase
 on:
   workflow_dispatch:
-#    inputs:
-#      protobuf-refs:
-#        description: 'Protobuf Git refs (e.g. [v23.1, main])'
-#        default: [ main ]
-#      grpc-refs:
-#        description: 'gRPC Git refs (e.g. [v1.55.0-pre2, main]'
-#        default: [ main ]
-
 jobs:
   check:
     runs-on: ubuntu-22.04
-    #container: gcr.io/gapic-images/googleapis:20230301
     strategy:
       fail-fast: false
-#      matrix:
-      #        protobuf-ref: ${{ protobuf-refs }}
-      #        grpc-ref: ${{ grpc-refs }}
       steps:
-      - name: Checkout sdk-platform-java main
-        uses: actions/checkout@v3
-        with:
-          path: sdk-platform-java
-      - name: Install sdk-platform-java and showcase to local maven repository
-        shell: bash
-        run: mvn install -T 1C -DskipTests
+        - name: Checkout sdk-platform-java main
+          uses: actions/checkout@v3
+          with:
+            path: sdk-platform-java
+        - name: Install sdk-platform-java and showcase to local maven repository
+          shell: bash
+          run: mvn install -T 1C -DskipTests
 
-      - name: Checkout Protobuf with specified Git ref "${{ matrix.protobuf-ref }}"
-        uses: actions/checkout@v3
-        with:
-          repository: 'protocolbuffers/protobuf'
-          ref: [ main ] #${{ matrix.protobuf-ref }}
-          path: protobuf
-      - name: Checkout gRPC with Protobuf v23
-        uses: actions/checkout@v3
-        with:
-          repository: grpc/grpc
-          ref: [ main ] #${{ matrix.grpc-ref }}
-          path: grpc
-
-      - name: Show protobuf repository's "git log -1"
-        working-directory: protobuf
-        shell: bash
-        run: |
-          echo "working directory: $(pwd)"
-          echo "git log -1:"
-          git log -1
-      - name: Show grpc repository's "git log -1"
-        working-directory: grpc
-        shell: bash
-        run: |
-          echo "working directory: $(pwd)"
-          echo "git log -1:"
-          git log -1
-            
-      - name: Cache Bazel cache
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cache/bazel
-          key: ${{ runner.os }}-bazel-${{ hashFiles('grpc/WORKSPACE', 'sdk-platform-java/WORKSPACE', 'protobuf/WORKSPACE') }}
-          restore-keys: |
-            ${{ runner.os }}-bazel-${{ hashFiles('grpc/WORKSPACE', 'sdk-platform-java/WORKSPACE', 'protobuf/WORKSPACE') }}
-
-      - name: Run code generation bazel build ${{ matrix.googleapis-bazel-target }}
-        shell: bash
-        run: |
-          echo "working directory: $(pwd)"
-          echo "GITHUB_WORKSPACE: ${GITHUB_WORKSPACE}"
-          echo "Running Bazel with ${GITHUB_WORKSPACE}/protobuf"
-          cd sdk-platform-java && \
-            bazelisk build //showcase:update_proto \
-                --verbose_failures \
-                --override_repository=com_google_protobuf=${GITHUB_WORKSPACE}/protobuf \
-                --override_repository=com_github_grpc_grpc=${GITHUB_WORKSPACE}/grpc
+#      - name: Checkout Protobuf with specified Git ref "${{ matrix.protobuf-ref }}"
+#        uses: actions/checkout@v3
+#        with:
+#          repository: 'protocolbuffers/protobuf'
+#          ref: [ main ] #${{ matrix.protobuf-ref }}
+#          path: protobuf
+#      - name: Checkout gRPC with Protobuf v23
+#        uses: actions/checkout@v3
+#        with:
+#          repository: grpc/grpc
+#          ref: [ main ] #${{ matrix.grpc-ref }}
+#          path: grpc
+#
+#      - name: Show protobuf repository's "git log -1"
+#        working-directory: protobuf
+#        shell: bash
+#        run: |
+#          echo "working directory: $(pwd)"
+#          echo "git log -1:"
+#          git log -1
+#      - name: Show grpc repository's "git log -1"
+#        working-directory: grpc
+#        shell: bash
+#        run: |
+#          echo "working directory: $(pwd)"
+#          echo "git log -1:"
+#          git log -1
+#
+#      - name: Cache Bazel cache
+#        uses: actions/cache@v3
+#        with:
+#          path: |
+#            ~/.cache/bazel
+#          key: ${{ runner.os }}-bazel-${{ hashFiles('grpc/WORKSPACE', 'sdk-platform-java/WORKSPACE', 'protobuf/WORKSPACE') }}
+#          restore-keys: |
+#            ${{ runner.os }}-bazel-${{ hashFiles('grpc/WORKSPACE', 'sdk-platform-java/WORKSPACE', 'protobuf/WORKSPACE') }}
+#
+#      - name: Run code generation bazel build ${{ matrix.googleapis-bazel-target }}
+#        shell: bash
+#        run: |
+#          echo "working directory: $(pwd)"
+#          echo "GITHUB_WORKSPACE: ${GITHUB_WORKSPACE}"
+#          echo "Running Bazel with ${GITHUB_WORKSPACE}/protobuf"
+#          cd sdk-platform-java && \
+#            bazelisk build //showcase:update_proto \
+#                --verbose_failures \
+#                --override_repository=com_google_protobuf=${GITHUB_WORKSPACE}/protobuf \
+#                --override_repository=com_github_grpc_grpc=${GITHUB_WORKSPACE}/grpc
