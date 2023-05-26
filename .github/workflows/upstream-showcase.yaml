@@ -16,9 +16,14 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
           cache: 'maven'
-      - name: Install sdk-platform-java and showcase to local maven repository
+
+      - name: Install sdk-platform-java to local maven repository
         shell: bash
         working-directory: sdk-platform-java
+        run: mvn install -B -ntp -T 1C -DskipTests
+      - name: Install showcase to local maven repository
+        shell: bash
+        working-directory: sdk-platform-java/showcase
         run: mvn install -B -ntp -T 1C -DskipTests
 
       - name: Checkout Protobuf with specified Git ref "${{ matrix.protobuf-ref }}"
@@ -57,6 +62,11 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-bazel-${{ hashFiles('grpc/WORKSPACE', 'sdk-platform-java/WORKSPACE', 'protobuf/WORKSPACE') }}
 
+      - name: Update Showcase version to 0.0.2-SNAPSHOT
+        working-directory: sdk-platform-java/showcase
+        shell: bash
+        run: mvn versions:set -DnewVersion=0.0.2-SNAPSHOT
+
       - name: Run code generation bazel build ${{ matrix.googleapis-bazel-target }}
         working-directory: sdk-platform-java
         shell: bash
@@ -65,3 +75,16 @@ jobs:
               --verbose_failures \
               --override_repository=com_google_protobuf=${GITHUB_WORKSPACE}/protobuf \
               --override_repository=com_github_grpc_grpc=${GITHUB_WORKSPACE}/grpc
+          bazelisk build //showcase:update_grpc \
+              --verbose_failures \
+              --override_repository=com_google_protobuf=${GITHUB_WORKSPACE}/protobuf \
+              --override_repository=com_github_grpc_grpc=${GITHUB_WORKSPACE}/grpc
+          bazelisk build //showcase:update_gapic \
+              --verbose_failures \
+              --override_repository=com_google_protobuf=${GITHUB_WORKSPACE}/protobuf \
+              --override_repository=com_github_grpc_grpc=${GITHUB_WORKSPACE}/grpc
+
+      - name: Clirr Check
+        working-directory: sdk-platform-java/showcase
+        shell: bash
+        run: mvn clirr:check -Dclirr.skip=false -DcomparisonVersion=0.0.1-SNAPSHOT -X
