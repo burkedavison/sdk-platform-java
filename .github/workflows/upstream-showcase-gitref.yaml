@@ -35,7 +35,7 @@ jobs:
         working-directory: sdk-platform-java/showcase
         run: mvn install -B -ntp -T 1C -DskipTests
 
-      - name: Checkout Protobuf
+      - name: Checkout Protobuf @ ${{ inputs.protobuf-ref }}
         uses: actions/checkout@v3
         with:
           repository: 'protocolbuffers/protobuf'
@@ -45,7 +45,7 @@ jobs:
         shell: bash
         run: git log -1
 
-      - name: Checkout gRPC
+      - name: Checkout gRPC @ ${{ inputs.grpc-ref }}
         uses: actions/checkout@v3
         with:
           repository: grpc/grpc
