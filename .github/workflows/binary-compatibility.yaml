@@ -1,0 +1,35 @@
+name: Binary Compatibility
+on:
+  pull_request:
+jobs:
+  check:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout sdk-platform-java @ target branch
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.base_ref }}
+      - uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'maven'
+      - name: Install sdk-platform-java and showcase to local maven repository
+        run: |
+          mvn install -B -ntp -T 1C -DskipTests
+          cd showcase
+          mvn install -B -ntp -T 1C -DskipTests
+
+      - name: Checkout sdk-platform-java @ PR merge commit
+        uses: actions/checkout@v3
+      - name: Update Showcase version to 0.0.2-SNAPSHOT
+        working-directory: showcase
+        run: mvn versions:set -B -ntp -DnewVersion=0.0.2-SNAPSHOT
+      - name: Generate showcase client
+        working-directory: showcase
+        run: mvn compile -B -ntp -Pupdate
+      - working-directory: showcase
+        run: git diff
+      - name: Clirr Check
+        working-directory: showcase
+        run: mvn -B -ntp clirr:check -Dclirr.skip=false -DcomparisonVersion=0.0.1-SNAPSHOT
